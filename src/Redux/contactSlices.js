@@ -1,42 +1,54 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
-import { nanoid } from 'nanoid';
+import { addContact, deleteContact, fetchContacts } from './api';
 
-const contactsSlice = createSlice({
-	name: 'contacts',
-	initialState: { items: [] },
-	reducers: {
-		addContact: {
-			reducer(state, action) {
-				state.items.push(action.payload);
-			},
-			prepare({ name, number }) {
-				return {
-					payload: {
-						id: nanoid(),
-						name,
-						number,
-					},
-				};
-			},
-		},
-		deleteContact(state, action) {
-			return {
-				items: state.items.filter(contact => contact.id !== action.payload),
-			};
-		},
-	},
-});
 
-export const { addContact, deleteContact } = contactsSlice.actions;
-
-const persistConfig = {
-	key: 'root',
-	storage,
+const handlePending = state => {
+	state.isLoading = true;
 };
 
-export const persistedReducer = persistReducer(
-	persistConfig,
-	contactsSlice.reducer
-);
+const handleRejected = (state, action) => {
+	state.isLoading = false;
+	state.error = action.payload;
+};
+
+const handleFetchContactsFulfilled = (state, action) => {
+	state.isLoading = false;
+	state.error = null;
+	state.items = action.payload;
+};
+const handleAddContactFulfilled = (state, action) => {
+	state.isLoading = false;
+	state.error = null;
+	state.items.push(action.payload);
+};
+
+
+const handleDeleteContactFulfilled = (state, action) => {
+	state.isLoading = false;
+	state.error = null;
+	const index = state.items.findIndex(
+		contact => contact.id === action.payload.id
+	);
+	state.items.splice(index, 1);
+};
+export const contactSlice = createSlice({
+	name: 'contacts',
+	initialState: {
+		items: [],
+		isLoading: false,
+		error: null,
+	},
+	extraReducers: builder =>
+		builder
+			.addCase(fetchContacts.pending, handlePending)
+			.addCase(fetchContacts.fulfilled, handleFetchContactsFulfilled)
+			.addCase(fetchContacts.rejected, handleRejected)
+			.addCase(deleteContact.pending, handlePending)
+			.addCase(deleteContact.fulfilled, handleDeleteContactFulfilled)
+			.addCase(deleteContact.rejected, handleRejected)
+			.addCase(addContact.pending, handlePending)
+			.addCase(addContact.fulfilled, handleAddContactFulfilled)
+			.addCase(addContact.rejected, handleRejected),
+});
+
+export const contactReducer = contactSlice.reducer;

@@ -1,14 +1,13 @@
-import { deleteContact } from 'Redux/contactSlices'
+import { deleteContact } from 'Redux/api'
+import { selectContacts, selectFilter } from 'Redux/selectors'
 import { useDispatch, useSelector } from 'react-redux'
 
 const ContactList = () => {
-	const contacts = useSelector(state => state.contacts.items)
-	const filter = useSelector(state => state.filter)
-
+	const contacts = useSelector(selectContacts)
+	const filter = useSelector(selectFilter)
 	const dispatch = useDispatch()
 
 	const contactsFilteredByName = () => { return contacts.filter(({ name }) => name.toLowerCase().includes(filter.toLowerCase())); }
-
 
 	return (<div className='m-2'>
 		<h1 className="display-3 ">Contact List</h1>
@@ -17,7 +16,7 @@ const ContactList = () => {
 				<li key={contact.id} className="list-group-item d-flex justify-content-between">
 					<div>
 						<p className='mb-1'>Name: {contact.name}</p>
-						<p className='m-0'>Number: {contact.number}</p>
+						<p className='m-0'>Number: {contact.phone}</p>
 					</div>
 					<button type="button" className="btn btn-outline-danger" onClick={() => dispatch(deleteContact(contact.id))}>Delete</button>
 				</li>
